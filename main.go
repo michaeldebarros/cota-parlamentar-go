@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -25,6 +27,16 @@ type Expense struct {
 }
 
 func main() {
+	fmt.Println("Programm Running")
+	http.HandleFunc("/", handleRequest)
+	log.Fatal(http.ListenAndServe(":8080", nil))
+}
+
+func handleRequest(w http.ResponseWriter, req *http.Request) {
+	//get params form request
+	u, err := url.Parse(req.URL.Path)
+	fmt.Println(u)
+
 	file, err := os.Open("Ano-2016.csv")
 
 	if err != nil {
@@ -35,13 +47,12 @@ func main() {
 	r.FieldsPerRecord = -1
 	r.Comma = ';'
 	r.LazyQuotes = true
-	var deputado string = "ZENAIDE MAIA"
-	var despesa string = "MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR"
+	var deputado = "ZENAIDE MAIA"
+	var despesa = "MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR"
 	var results []Expense
 
 	for {
 		record, err := r.Read()
-
 		if err == io.EOF {
 			break
 		}
@@ -49,7 +60,7 @@ func main() {
 			log.Fatal(err)
 		}
 		if record[0] == deputado && record[8] == despesa {
-			document := Expense{record[0], record[2], record[4], record[5], record[8], record[10], record[11], record[12], record[15], record[18], record[25]}
+			document := Expense{record[0], record[2], record[4], record[5], record[8], record[10], record[1], record[12], record[15], record[18], record[25]}
 
 			//push documents to results slice
 			results = append(results, document)
@@ -59,5 +70,6 @@ func main() {
 	if err != nil {
 		fmt.Print("Error while marchalling the restults to json")
 	}
-	fmt.Println(string(jsonResults))
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResults)
 }
