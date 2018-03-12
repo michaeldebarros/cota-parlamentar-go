@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 //Expense is the stuct for every expendature
@@ -33,11 +34,17 @@ func main() {
 }
 
 func handleRequest(w http.ResponseWriter, req *http.Request) {
-	//get params form request
-	u, err := url.Parse(req.URL.Path)
-	fmt.Println(u)
+	//get params from path
+	p, err := url.PathUnescape(req.URL.String())
+	if p == "/favicon.ico" {
+		return
+	}
+	params := strings.Split(p, "/")
+	ano := params[2]
+	deputado := params[3]
+	despesa := params[4]
 
-	file, err := os.Open("Ano-2016.csv")
+	file, err := os.Open(fmt.Sprintf("Ano-%s.csv", ano))
 
 	if err != nil {
 		fmt.Println("There is an error here")
@@ -47,8 +54,8 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 	r.FieldsPerRecord = -1
 	r.Comma = ';'
 	r.LazyQuotes = true
-	var deputado = "ZENAIDE MAIA"
-	var despesa = "MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR"
+	//	var deputado = "ZENAIDE MAIA"
+	//	var despesa = "MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR"
 	var results []Expense
 
 	for {
