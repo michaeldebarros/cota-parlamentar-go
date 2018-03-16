@@ -29,15 +29,27 @@ type Expense struct {
 
 func main() {
 	fmt.Println("Programm Running")
-	http.HandleFunc("/", handleRequest)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./build/static"))))
+	http.HandleFunc("/api/", handleRequest)
+	http.HandleFunc("/", handleIndex)
+
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
+func handleIndex(w http.ResponseWriter, req *http.Request) {
+	fmt.Println("this is the index")
+	http.ServeFile(w, req, "./build/index.html")
+}
+
 func handleRequest(w http.ResponseWriter, req *http.Request) {
+
 	//get params from path
 	p, err := url.PathUnescape(req.URL.String())
 	if p == "/favicon.ico" {
 		return
+	}
+	if err != nil {
+		fmt.Println("There was an error here")
 	}
 	params := strings.Split(p, "/")
 	ano := params[2]
@@ -47,15 +59,14 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 	file, err := os.Open(fmt.Sprintf("Ano-%s.csv", ano))
 
 	if err != nil {
-		fmt.Println("There is an error here")
+		fmt.Println(err)
 	}
 
 	r := csv.NewReader(file)
 	r.FieldsPerRecord = -1
 	r.Comma = ';'
 	r.LazyQuotes = true
-	//	var deputado = "ZENAIDE MAIA"
-	//	var despesa = "MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR"
+
 	var results []Expense
 
 	for {
@@ -67,15 +78,18 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 			log.Fatal(err)
 		}
 		if record[0] == deputado && record[8] == despesa {
-			document := Expense{record[0], record[2], record[4], record[5], record[8], record[10], record[1], record[12], record[15], record[18], record[25]}
+			document := Expense{record[0], record[2], record[4], record[5], record[8], record[10], record[11], record[12], record[15], record[18], record[25]}
 
 			//push documents to results slice
 			results = append(results, document)
 		}
 	}
+	if len(results) == 0 {
+
+	}
 	jsonResults, err := json.Marshal(results)
 	if err != nil {
-		fmt.Print("Error while marchalling the restults to json")
+		fmt.Print("Error while marchalling the resutls to json")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResults)
