@@ -28,16 +28,19 @@ type Expense struct {
 }
 
 func main() {
+
 	fmt.Println("Programm Running")
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./build/static"))))
 	http.HandleFunc("/api/", handleRequest)
 	http.HandleFunc("/", handleIndex)
-
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 func handleIndex(w http.ResponseWriter, req *http.Request) {
-	fmt.Println("this is the index")
 	http.ServeFile(w, req, "./build/index.html")
 }
 
@@ -84,12 +87,11 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 			results = append(results, document)
 		}
 	}
-	if len(results) == 0 {
 
-	}
 	jsonResults, err := json.Marshal(results)
 	if err != nil {
-		fmt.Print("Error while marchalling the resutls to json")
+		w.Header().Set("Content-Type", "application/json")
+		io.WriteString(w, "Error while marchalling the results to json")
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResults)
