@@ -91,8 +91,12 @@ func handleRequest(w http.ResponseWriter, req *http.Request) {
 	jsonResults, err := json.Marshal(results)
 	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 		io.WriteString(w, "Error while marchalling the results to json")
 	}
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(jsonResults)
 }
